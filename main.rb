@@ -46,7 +46,10 @@ def running_record(domain, record, linode_api_key)
     when 'mx'
       puts "creating MX record"
       l.domain.resource.create(:DomainID => domain.domainid, :Type => 'MX', :Target => record.data[0,record.data.length-1], :Priority => record.aux, :TTL_sec => record.ttl)
-    when 'txt', 'cname', 'a'
+    when 'cname'
+      name = record.a? && record.name == zone.origin ? '' : record.name
+      l.domain.resource.create(:DomainID => domain.domainid, :Type => record.record_type, :Name => name, :Target => record.data[0,record.data.length-1], :TTL_sec => record.ttl)
+    when 'txt','a'
       puts "creating #{record.record_type} record"
       name = record.a? && record.name == zone.origin ? '' : record.name
       l.domain.resource.create(:DomainID => domain.domainid, :Type => record.record_type, :Name => name, :Target => record.data, :TTL_sec => record.ttl)
