@@ -32,7 +32,7 @@ class Record < ActiveResource::Base
   self.site = SLICEHOST
 end
 
-def running_record(domain, record, linode_api_key)
+def running_record(domain, record, linode_api_key, zone)
   puts record.record_type + " " + record.data  
   l = Linode.new(:api_key => linode_api_key)
   
@@ -47,11 +47,19 @@ def running_record(domain, record, linode_api_key)
       puts "creating MX record"
       l.domain.resource.create(:DomainID => domain.domainid, :Type => 'MX', :Target => record.data[0,record.data.length-1], :Priority => record.aux, :TTL_sec => record.ttl)
     when 'cname'
-      name = record.a? && record.name == zone.origin ? '' : record.name
+      if record.name == zone.origin then
+        name = ''
+      else
+        name = record.name
+      end
       l.domain.resource.create(:DomainID => domain.domainid, :Type => record.record_type, :Name => name, :Target => record.data[0,record.data.length-1], :TTL_sec => record.ttl)
     when 'txt','a'
-      puts "creating #{record.record_type} record"
-      name = record.a? && record.name == zone.origin ? '' : record.name
+      puts "creating #{record.record_type} record :'#{record.name}':'#{zone.origin}'"
+      if record.name == zone.origin then
+        name = ''
+      else
+        name = record.name
+      end
       l.domain.resource.create(:DomainID => domain.domainid, :Type => record.record_type, :Name => name, :Target => record.data, :TTL_sec => record.ttl)
   end
 end
@@ -62,7 +70,7 @@ def running_zone(zone, linode_api_key)
   puts "Creating #{zone.origin[0, zone.origin.length-1]} @ linode.com"
   domain = l.domain.create(:Domain => zone.origin[0, zone.origin.length-1], :Type => 'Master', :SOA_Email => "dev@oneblackbear.com", :TTL_sec => zone.ttl, :status => 1)
   Record.find(:all, :params => {:zone_id => zone.id}).each do |record|
-    running_record(domain, record, linode_api_key)    
+    running_record(domain, record, linode_api_key, zone)    
   end      
   puts "----"
 end
