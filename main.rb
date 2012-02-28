@@ -1,7 +1,8 @@
 #!/usr/bin/ruby
 require 'rubygems'
 require 'pp'
-require 'active_resource'
+gem 'activeresource', '2.3.9'
+require 'activeresource'
 require 'linode'
 require 'logger'
 require 'highline/import'
